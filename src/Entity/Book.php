@@ -5,11 +5,13 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** A book. */
 #[ORM\Entity]
 #[ApiResource]
+#[ApiResource(normalizationContext: ['groups' => ['book:read']])]
 class Book
 {
     /** The ID of this book. */
@@ -53,5 +55,22 @@ class Book
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    #[Groups(['book:read'])]
+    public function getAverageRating(): ?float
+    {
+        if (!is_iterable($this->reviews) || count($this->reviews) === 0) {
+            return null;
+        }
+
+        $sum = 0;
+        $count = 0;
+        foreach ($this->reviews as $review) {
+            $sum += $review->rating;
+            $count++;
+        }
+
+        return $count > 0 ? round($sum / $count, 2) : null;
     }
 }
